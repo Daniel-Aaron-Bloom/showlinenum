@@ -1,0 +1,51 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install gawk (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y gawk
+
+      - name: Install gawk (macOS)
+        if: matrix.os == 'macos-latest'
+        run: brew install gawk
+
+      - name: Verify gawk installation
+        run: |
+          which gawk
+          gawk --version
+
+      - name: Make test runner executable
+        run: chmod +x tests/run_tests.sh
+
+      - name: Run tests
+        run: cd tests && ./run_tests.sh
+
+      - name: Test summary
+        if: always()
+        run: |
+          echo "### Test Results :test_tube:" >> $GITHUB_STEP_SUMMARY
+          if [ -f tests/test_results.txt ]; then
+            cat tests/test_results.txt >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Tests completed on ${{ matrix.os }}" >> $GITHUB_STEP_SUMMARY
+          fi

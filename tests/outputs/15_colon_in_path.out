@@ -1,0 +1,2 @@
+HEAD:test.txt: :-old
+HEAD:test.txt:1:+new

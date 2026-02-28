@@ -1,0 +1,7 @@
+diff --git a/HEAD:test.txt b/HEAD:test.txt
+index 1234567..abcdefg 100644
+--- a/HEAD:test.txt
++++ b/HEAD:test.txt
+@@ -1,2 +1,2 @@
+-old
++new
