@@ -18,166 +18,159 @@
 # You should have received a copy of the GNU General Public License
 # along with this file. If not, see <http://www.gnu.org/licenses/>.
 #
+################################################################################
 #
+# DESCRIPTION
 #
-# This gawk script changes the output of git diff to prepend the line number
-# for each line.
+# This gawk script enhances git diff output by prepending line numbers to each
+# line, making it easier to identify the location of changes in files.
 #
+################################################################################
 #
-#### Usage:
+# USAGE
 #
 # git diff [options] | showlinenum.awk [options]
 #
 # All options for showlinenum require a value and are specified using the
 # format option=value.
 #
-####
+################################################################################
 #
+# OUTPUT FORMAT
 #
-#### Output:
-#
-# The diff line output is in this format:
+# The diff line output follows this format:
 # [path:]<line number>:<diff line>
 #
-# When the path is shown it's the new version's file path. Line numbers are
-# shown for lines in the new version of the file (ie lines that are the same or
-# added). If a line appears only in the old version of the file (ie lines
-# removed) or the warning indicator is found then padding space is used in
-# place of a line number. If a file was removed a tilde ~ is used in place of a
-# line number.
+# When the path is shown, it represents the new version's file path. Line
+# numbers are displayed for lines in the new version of the file (lines that
+# are unchanged or added). For lines that appear only in the old version
+# (removed lines) or for diff warnings, padding space is used in place of a
+# line number. For removed files, a tilde (~) is used in place of a line number.
 #
 # The first character in <diff line> is one of four indicators:
-# - : Line removed
-# + : Line added
-# <space> : Line same
-# \ : diff warning about previous line
+# -       : Line removed
+# +       : Line added
+# <space> : Line unchanged
+# \       : diff warning about previous line
 #
-# For example:
+# Examples:
 #  :-removed
 # 7:+added
 # 8: common
 #  :\ No newline at end of file
 #
-# As far as I know the backslash indicator is only used for the missing newline
-# at EOF warning. When that warning appears it applies to the line immediately
-# above it. In the example above both the old and new version of the compared
-# file are missing the newline at EOF. If the line above a warning is a removed
-# line then the warning applies to the old version of the file, and if the line
-# above a warning is an added line then the warning applies to the new version
-# of the file.
+# The backslash indicator is used exclusively for the missing newline at EOF
+# warning. When this warning appears, it applies to the line immediately above
+# it. In the example above, both the old and new versions of the file are
+# missing the newline at EOF. If the line above a warning is a removed line,
+# the warning applies to the old version; if it's an added line, the warning
+# applies to the new version.
 #
-# All errors are sent to standard error output (stderr). Currently all errors
-# are treated as fatal errors. On fatal error a line that starts with 'FATAL:'
-# is followed by script name and error message(s), which may be one or more
-# lines. This script then aborts with exit code 1.
+# ERROR HANDLING
 #
-####
+# All errors are sent to standard error (stderr). All errors are treated as
+# fatal. On fatal error, a line starting with 'FATAL:' is followed by the
+# script name and error message(s), which may span multiple lines. The script
+# then aborts with exit code 1.
 #
+################################################################################
 #
-#### Examples:
+# EXAMPLES
 #
-# Simple example. Line numbers are prepended to git diff's output.
-# git diff --cached | showlinenum.awk
+# Basic usage - prepend line numbers to git diff output:
+#   git diff --cached | showlinenum.awk
 #
-# This script properly handles the ANSI escape color codes output by git diff.
-# To get color output you have to force git diff to send it by passing
-# --color=always. When that option is used the color output is always output so
-# it is not recommended unless you are either outputting to the terminal or
-# somewhere that can properly handle the color codes. Many scripts do not
-# function correctly when working with color coded input.
+# Color output support:
+# This script properly handles ANSI escape color codes from git diff. To enable
+# color output, use --color=always. Note that color output should only be used
+# when outputting to a terminal or a system that can properly handle ANSI color
+# codes. Many scripts do not function correctly with color-coded input.
 #
-# This is the same as the first example, but with color output.
-# git diff --color=always --cached | showlinenum.awk
+#   git diff --color=always --cached | showlinenum.awk
 #
-# Options can be passed to this script by using awk's -v option or the
-# traditional way (shown).
-# git diff --color=always HEAD~1 HEAD | showlinenum.awk show_header=0
-# git diff --color=always HEAD~1 HEAD | showlinenum.awk show_path=1 show_hunk=0
+# Passing options:
+# Options can be passed using awk's -v option or the traditional format shown:
+#   git diff --color=always HEAD~1 HEAD | showlinenum.awk show_header=0
+#   git diff --color=always HEAD~1 HEAD | showlinenum.awk show_path=1 show_hunk=0
 #
-####
+################################################################################
 #
+# OPTIONS
 #
-#### Options:
+# show_header [0,1]
+#   Default: 1
+#   Show diff headers.
 #
-# @show_header [0,1] default: 1
-# Show diff headers.
+#   Example:
+#     diff --git a/abc.c b/abc.c
+#     index 285065f..2471f87 100644
+#     --- a/abc.c
+#     +++ b/abc.c
 #
-# Example:
-# diff --git a/abc.c b/abc.c
-# index 285065f..2471f87 100644
-# --- a/abc.c
-# +++ b/abc.c
+# show_hunk [0,1]
+#   Default: (show_header ? 1 : 0)
+#   Show hunk headers.
 #
-##
+#   Example: @@ -0,0 +1,17 @@
 #
-# @show_hunk [0,1] default: ( show_header ? 1 : 0 )
-# Show line hunks.
+# show_path [0,1]
+#   Default: (show_header ? 0 : 1)
+#   Show file paths before line numbers.
 #
-# Example: @@ -0,0 +1,17 @@
+#   Example:
+#     testdir/file:39:+some added text
 #
-##
+# show_binary [0,1]
+#   Default: (show_path ? 1 : 0)
+#   Show binary files that differ in an empty format: [path:][~]:
 #
-# @show_path [0,1] default: ( show_header ? 0 : 1 )
-# Show paths before line numbers.
+#   Binary files have no line-based representation, so there is no line number
+#   or diff content to display. When headers are shown, binary file changes are
+#   indicated by the message "Binary files <old> and <new> differ". When headers
+#   are hidden, binary file changes are shown in an "empty format" containing
+#   only the path (if enabled) and a tilde (~) for removed files.
 #
-# Example:
-# testdir/file:39:+some added text
+#   Examples (empty format):
+#     testdir/binary_file::
+#     :
 #
-##
+#   Example (removed binary file with path):
+#     calc.exe:~:
 #
-# @show_binary [0,1] default: ( show_path ? 1 : 0 )
-# Show a binary file that differs in an empty format. [path:][~]:
+# allow_colons_in_path [0,1]
+#   Default: (show_path ? 0 : 1)
+#   Allow colons in file paths.
 #
-# Binary files have no concept of lines, therefore there is no line number or
-# diff line to show that a binary file differs. If the headers are shown you
-# can always see whether or not a binary file differs because there will be a
-# message "Binary files <old> and <new> differ". If the headers are not shown
-# however, that message is suppressed and a binary file that differs has an
-# "empty format" with no information, except for a tilde that will be shown if
-# the file was removed.
+#   When disabled, the script will abort if a path containing a colon is
+#   encountered. This ensures the output can be reliably parsed using the first
+#   colon as a separator after the file path. Note that git diff paths may
+#   include commit references with colons (e.g., HEAD:./foo/bar), which require
+#   this option to be enabled.
 #
-# Here are two examples of the empty format, one where the path is shown and
-# one where it isn't:
-# testdir/binary_file::
-# :
+# color_line_number, color_path, color_separator
+#   Format: <num>[;num][;num]
+#   Add ANSI color codes to the respective sections.
 #
-# Here is an example of a removed binary file, path shown:
-# calc.exe:~:
+#   Colors are specified using one or more ANSI color codes separated by
+#   semicolons. This option should only be used when outputting to a terminal.
+#   Shell quoting may be required if semicolons are present.
 #
-##
+#   Example: color_line_number=1;37;45
+#     Bright white foreground (1;37) on purple background (45)
 #
-# @allow_colons_in_path [0,1] default: ( show_path ? 0 : 1 )
-# Allow colons in path.
-#
-# If this option is off then abort if a path that contains a colon is
-# encountered. That's done to guarantee that this script's diff line output can
-# always be parsed with the first colon occurring immediately after the full
-# path. Note git diff paths may start with '<commit>:' like HEAD:./foo/bar, and
-# for such a path this option would need to be on.
-#
-##
-#
-# @color_{line_number,path,separator} <num>[;num][;num]
-# Add color to some sections.
-#
-# Color the respective section using one or more ANSI color codes.
-# This is not recommended unless you are outputting to the terminal.
-# If semi-colons are present in these options your shell may need them quoted.
-# Example: "color_line_number=1;37;45" is bright white foreground (1;37) on
-# purple background (45).
-#
-####
+################################################################################
 #
 
 
 {
-# This code block is compatible with both the bourne shell and gawk. If this
-# gawk script is being interpreted by the bourne shell then gawk is executed to
-# become its interpreter.
+# Launcher block: This code is compatible with both bourne shell and gawk.
+# If the script is being interpreted by the bourne shell, gawk is executed
+# to become the interpreter for this script.
 LAUNCHER="" "exec" "gawk" "-f" "$0" "$@"
 }
 
 
+# Reset all header-related parsing variables to their initial state
 function reset_header_variables()
 {
   parsing_diff_header = 0;
@@ -191,17 +184,16 @@ function reset_header_variables()
   diff = 0;
 }
 
+# Initialize all script variables and validate color parameters
 function init()
 {
   reset_header_variables();
 
-  # To determine whether or not a variable was defined on the command line and
-  # is not an empty string it must be tested. Many versions of gawk will show a
-  # warning if using option --lint and an undefined variable is evaluated.
-  # Therefore this workaround to force define some variables as a string by
-  # appending an empty string.
+  # Force define variables as strings by appending an empty string. This is
+  # necessary to prevent warnings in gawk --lint mode when testing whether a
+  # variable was defined on the command line.
 
-  # String variables.
+  # Initialize color variables
   color_line_number = color_line_number "";
   color_path = color_path "";
   color_separator = color_separator "";
@@ -210,15 +202,14 @@ function init()
   die_if_bad_color(color_path);
   die_if_bad_color(color_separator);
 
-  # Bool variables are later converted back to a number by get_bool().
+  # Initialize boolean variables (converted to numbers by get_bool())
   show_header = show_header "";
   show_hunk = show_hunk "";
   show_path = show_path "";
   show_binary = show_binary "";
   allow_colons_in_path = allow_colons_in_path "";
 
-  # Return the variable as a bool value unless it is empty then return its
-  # default bool value.
+  # Convert variables to boolean values or use defaults
   show_header = get_bool(show_header, 1);
   show_hunk = get_bool(show_hunk, (show_header ? 1 : 0));
   show_path = get_bool(show_path, (show_header ? 0 : 1));
@@ -226,16 +217,17 @@ function init()
   allow_colons_in_path = get_bool(allow_colons_in_path, (show_path ? 0 : 1));
 }
 
+# Print a fatal error message to stderr and exit with code 1
 function FATAL(a_msg)
 {
   print "";
-  # Apparently there is no portable way to get this script's name at runtime?
+  # Note: There is no portable way to get the script's name at runtime
   print strip_ansi_color_codes("FATAL: showlinenum: " a_msg) > "/dev/stderr";
   exit 1;
 }
 
-# this returns the bool numeric value of 'input' if it contains a numeric or
-# string bool value, otherwise it returns the numeric value of default_value.
+# Return the boolean numeric value of 'input' if it contains a valid boolean
+# value (0 or 1), otherwise return the numeric value of 'a_default_value'
 function get_bool(input, a_default_value)
 {
   if(a_default_value !~ /^[0-1]$/)
@@ -254,6 +246,8 @@ function get_bool(input, a_default_value)
   return a_default_value + 0;
 }
 
+# Validate that a color parameter contains only numbers and semicolons
+# Abort with a fatal error if invalid characters are found
 function die_if_bad_color(input)
 {
   if(input ~ /[^0-9;]/)
@@ -264,8 +258,8 @@ function die_if_bad_color(input)
   }
 }
 
-# Fix an extracted path.
-# eg '+++ b/foo/bar' the input is 'b/foo/bar' and the output is 'foo/bar'
+# Fix an extracted path by removing git diff prefix and trailing tabs
+# Example: '+++ b/foo/bar' with input 'b/foo/bar' returns 'foo/bar'
 function fix_extracted_path(input)
 {
   if(input == "/dev/null")
@@ -299,26 +293,28 @@ function fix_extracted_path(input)
     FATAL(errmsg);
   }
 
-  # Remove an erroneous trailing tab that git diff can add to some non-binary
-  # paths. eg an unquoted 'b/a $b	' becomes 'b/a $b' if the diff line
-  # only contains the latter.
+  # Remove erroneous trailing tab that git diff can add to some non-binary
+  # paths. For example, an unquoted 'b/a $b\t' becomes 'b/a $b' if the diff
+  # line only contains the latter form.
   if((input ~ /\t$/) && !index(diff, input) && \
      index(diff, substr(input, 1, length(input) - 1)))
   {
     sub(/\t$/, "", input);
   }
 
+  # Remove the git diff prefix (a/, b/, i/, w/, c/, o/)
   sub(/[abiwco]\//, "", input);
 
   return input;
 }
 
-# this returns a string with the ansi color codes removed
+# Return a string with all ANSI color codes removed
 function strip_ansi_color_codes(input)
 {
   return gensub(/\033\[[0-9;]*m/, "", "g", input);
 }
 
+# Print a separator with optional color formatting
 function print_separator(a_separator)
 {
   if(color_separator)
@@ -331,6 +327,7 @@ function print_separator(a_separator)
   }
 }
 
+# Print a line number with optional color formatting and uniform width
 function print_line_number(a_line_number)
 {
   if(color_line_number)
@@ -340,12 +337,10 @@ function print_line_number(a_line_number)
 
   if(a_line_number ~ /^[0-9]+$/)
   {
-    # Awk stores all integers internally as floating point. If printf is passed
-    # an integer it is allowed convert it to scientific notation which I don't
-    # want for line numbers. I'm not sure how relevant that is since it seems
-    # to vary between different versions of awk and only when the integer is
-    # large (how large?).
-    # The 'f' type specifier should show [-9007199254740992, 9007199254740992]
+    # Awk stores all integers internally as floating point. Printf may convert
+    # large integers to scientific notation, which is undesirable for line
+    # numbers. The 'f' type specifier with %.0f prevents this and handles the
+    # range [-9007199254740992, 9007199254740992] correctly.
     # Format with uniform width (right-aligned)
     printf "%*s", line_width, sprintf("%.0f", a_line_number + 0);
   }
@@ -362,6 +357,7 @@ function print_line_number(a_line_number)
   print_separator(":");
 }
 
+# Print a file path with optional color formatting (only if show_path is enabled)
 function print_path(a_path)
 {
   if(!show_path)
@@ -381,15 +377,21 @@ function print_path(a_path)
   print_separator(":");
 }
 
+################################################################################
 #
-# main
+# MAIN PROCESSING
 #
+# Process each line of input from git diff and add line numbers
+#
+################################################################################
 {
+  # Initialize on first line of input
   if(NR == 1)
   {
     init();
   }
 
+  # Process diff header line (e.g., "diff --git a/file b/file")
   if($0 ~ /^(\033\[[0-9;]*m)*diff /)
   {
     reset_header_variables();
@@ -406,13 +408,13 @@ function print_path(a_path)
     next;
   }
 
-  # check for combined diff line info
+  # Reject combined diff format (not supported)
   if($0 ~ /^(\033\[[0-9;]*m)*@@@+ /)
   {
     FATAL("Combined diff format not supported.");
   }
 
-  # check for diff line info
+  # Process hunk header line (e.g., "@@ -10,7 +10,6 @@")
   if($0 ~ /^(\033\[[0-9;]*m)*@@ /)
   {
     line = 0;
@@ -429,13 +431,14 @@ function print_path(a_path)
     regex = "^@@ -[0-9]+(,[0-9]+)? \\+([0-9]+)(,([0-9]+))? @@.*$";
     if(stripped ~ regex)
     {
+      # Extract starting line number from hunk header
       line = gensub(regex, "\\2", 1, stripped);
-      # Adding zero to line converts it from a string to an integer.
-      # That only works when all color codes have been removed.
+      # Convert string to integer (requires color codes to be removed first)
       line = line + 0;
       found_line = 1;
 
-      # Extract line count to calculate maximum line number width
+      # Calculate line number width for uniform formatting based on maximum
+      # line number in this hunk
       line_count_str = gensub(regex, "\\4", 1, stripped);
       if(line_count_str ~ /^[0-9]+$/)
       {
@@ -482,11 +485,12 @@ function print_path(a_path)
     next;
   }
 
+  # Parse diff header lines
   if(parsing_diff_header)
   {
     stripped = strip_ansi_color_codes($0);
 
-    # Check for oldfile path
+    # Extract old file path from "---" line
     regex = "^\\-\\-\\- (\\042?[aiwco]\\/.+|\\/dev\\/null)$";
     if(stripped ~ regex)
     {
@@ -501,7 +505,7 @@ function print_path(a_path)
       next;
     }
 
-    # Check for newfile path
+    # Extract new file path from "+++" line
     regex = "^\\+\\+\\+ (\\042?[biwco]\\/.+|\\/dev\\/null)$";
     if(stripped ~ regex)
     {
@@ -516,7 +520,7 @@ function print_path(a_path)
       next;
     }
 
-    # Check for binary old/newfile path
+    # Handle binary file diff indicator
     regex = "^Binary files (.*) differ$";
     if(stripped ~ regex)
     {
@@ -525,9 +529,8 @@ function print_path(a_path)
       found_path = 0;
       found_oldfile_path = 0;
 
-      # Check for binary oldfile path.
-      # The oldfile path only needs to be set if newfile is /dev/null (deleted
-      # or moved file).
+      # Extract old file path for deleted or moved binary files
+      # (indicated by "and /dev/null" in the binary files message)
       if(match(path, / and \/dev\/null$/))
       {
         oldfile_path = substr(path, 1, length(path) - RLENGTH);
@@ -541,9 +544,8 @@ function print_path(a_path)
         }
       }
 
-      # This gets the path for a binary file by digging through the first line
-      # of the diff header ('diff') and the binary file notice line
-      # ('stripped') to find the longest rightmost match between the two.
+      # Extract new file path for binary files by finding the longest rightmost
+      # match between the diff header line and the binary files notice line
       while(!found_path && match(path, /and \042?[biwco]\/.+$/))
       {
         path_len = RLENGTH - 4;
@@ -606,16 +608,19 @@ function print_path(a_path)
     next;
   }
 
+  # Validate that required path information has been found
   if(!found_path || !found_oldfile_path)
   {
     FATAL("Path info not found.");
   }
 
+  # Validate that hunk line information has been found
   if(!found_line)
   {
     FATAL("Line info not found.");
   }
 
+  # Handle removed files (new path is /dev/null)
   if(path == "/dev/null")
   {
     if($0 !~ /^(\033\[[0-9;]*m)*[\\-]/)
@@ -627,7 +632,7 @@ function print_path(a_path)
       FATAL(errmsg);
     }
 
-    # File removed: path/to/foo:~:
+    # Format: path/to/foo:~:-removed line
     print_path(oldfile_path);
     print_line_number("~");
 
@@ -635,10 +640,9 @@ function print_path(a_path)
     next;
   }
 
-
-  # Extract the indicator. Unfortunately early versions of gawk (like the one
-  # included with git for Windows) do not support an array parameter for
-  # match() so the indicator must be extracted on success by using substr().
+  # Extract the diff line indicator (+, -, space, or backslash)
+  # Note: Early versions of gawk (e.g., Git for Windows) do not support array
+  # parameters for match(), so substr() is used instead.
 
   if(($0 !~ /^(\033\[[0-9;]*m)*[\\ +-]/) || \
      !match($0, /[\\ +-]/) || (RLENGTH != 1))
@@ -651,15 +655,16 @@ function print_path(a_path)
 
   indicator = substr($0, RSTART, RLENGTH);
 
+  # Process added or unchanged lines (show line number and increment)
   if((indicator == "+") || (indicator == " "))
   {
     print_path(path);
     print_line_number(line++);
   }
+  # Process removed lines or warnings (show padding instead of line number)
   else if((indicator == "-") || (indicator == "\\"))
   {
     print_path(path);
-    # Fill the line number section with padding.
     print_line_number("");
   }
   else

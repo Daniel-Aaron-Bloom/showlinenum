@@ -1,44 +1,36 @@
-showlinenum
-===========
+# showlinenum
 
 showlinenum.awk - show line numbers for git diff
 
 [![Tests](https://github.com/jay/showlinenum/workflows/Tests/badge.svg)](https://github.com/jay/showlinenum/actions)
 
-This gawk script changes the output of git diff to prepend the line number for
-each line.
+This gawk script modifies git diff output by prepending line numbers to each line of the diff.
 
 [![screenshot](screenshot.png?raw=true)](screenshot.png?raw=true)
 
-Usage
------
+## Usage
 
 `git diff [options] | showlinenum.awk [options]`
 
-All options for showlinenum require a value and are specified using the format
-`option=value`.
+All options for showlinenum require a value and are specified using the format `option=value`.
 
 Combined diff format is not supported.
 
-Output
-------
+## Output
 
-The diff line output is in this format:  
+The diff line output is in this format:
 `[path:]<line number>:<diff line>`
 
-When the path is shown it's the new version's file path. Line numbers are shown
-for lines in the new version of the file (ie lines that are the same or added).
-If a line appears only in the old version of the file (ie lines removed) or the
-warning indicator is found then padding space is used in place of a line
-number. If a file was removed a tilde ~ is used in place of a line number.
+When the path is shown, it represents the new version's file path. Line numbers are displayed for lines in the new version of the file (i.e., lines that are unchanged or added). If a line appears only in the old version of the file (i.e., lines removed) or the warning indicator is found, then padding space is used in place of a line number. If a file was removed, a tilde (~) is used in place of a line number.
 
-The first character in `<diff line>` is one of four indicators:  
-`-` : Line removed  
-`+` : Line added  
-` ` : Line same  
-`\` : diff warning about previous line
+The first character in `<diff line>` is one of four indicators:
+`-` : Line removed
+`+` : Line added
+` ` : Line unchanged
+`\` : Diff warning about previous line
 
 For example:
+
 ```
  :-removed
 7:+added
@@ -46,47 +38,32 @@ For example:
  :\ No newline at end of file
 ```
 
-As far as I know the backslash indicator is only used for the missing newline
-at EOF warning. When that warning appears it applies to the line immediately
-above it. In the example above both the old and new version of the compared
-file are missing the newline at EOF. If the line above a warning is a removed
-line then the warning applies to the old version of the file, and if the line
-above a warning is an added line then the warning applies to the new version of
-the file.
+The backslash indicator is used exclusively for the missing newline at end of file warning. When this warning appears, it applies to the line immediately above it. In the example above, both the old and new versions of the compared file are missing the newline at EOF. If the line above a warning is a removed line, the warning applies to the old version of the file. If the line above a warning is an added line, the warning applies to the new version of the file.
 
-All errors are sent to standard error output (stderr). Currently all errors are
-treated as fatal errors. On fatal error a line that starts with `FATAL:` is
-followed by script name and error message(s), which may be one or more lines.
-This script then aborts with exit code 1.
+All errors are sent to standard error output (stderr). All errors are treated as fatal. When a fatal error occurs, a line starting with `FATAL:` is output, followed by the script name and error message(s), which may span one or more lines. The script then aborts with exit code 1.
 
-Examples
---------
+## Examples
 
-Simple example. Line numbers are prepended to git diff's output.  
+Basic usage with line numbers prepended to git diff output:
 `git diff --cached | showlinenum.awk`
 
-This script properly handles the ANSI escape color codes output by git diff. To
-get color output you have to force git diff to send it by passing
-`--color=always`. When that option is used the color output is always output so
-it is not recommended unless you are either outputting to the terminal or
-somewhere that can properly handle the color codes. Many scripts do not
-function correctly when working with color coded input.
+This script properly handles ANSI escape color codes output by git diff. To enable color output, pass `--color=always` to git diff. Note that this forces color output in all cases, so it is recommended only when outputting to a terminal or to a destination that can properly handle color codes. Many scripts do not function correctly with color-coded input.
 
-This is the same as the first example, but with color output.  
+Same as the first example, with color output enabled:
 `git diff --color=always --cached | showlinenum.awk`
 
-Options can be passed to this script by using awk's -v option or the
-traditional way (shown).  
-`git diff --color=always HEAD~1 HEAD | showlinenum.awk show_header=0`  
+Options can be passed using awk's `-v` option or by appending them directly:
+`git diff --color=always HEAD~1 HEAD | showlinenum.awk show_header=0`
 `git diff --color=always HEAD~1 HEAD | showlinenum.awk show_path=1 show_hunk=0`
 
-Options
--------
+## Options
 
-### Show diff headers.
-#### `@show_header [0,1] default: 1`
+### Show diff headers
+
+#### `show_header [0,1] default: 1`
 
 Example:
+
 ```
 diff --git a/abc.c b/abc.c
 index 285065f..2471f87 100644
@@ -94,101 +71,73 @@ index 285065f..2471f87 100644
 +++ b/abc.c
 ```
 
-### Show line hunks.
-#### `@show_hunk [0,1] default: ( show_header ? 1 : 0 )`
+### Show line hunks
+
+#### `show_hunk [0,1] default: ( show_header ? 1 : 0 )`
 
 Example: `@@ -0,0 +1,17 @@`
 
-### Show paths before line numbers.
-#### `@show_path [0,1] default: ( show_header ? 0 : 1 )`
+### Show paths before line numbers
 
-Example:  
+#### `show_path [0,1] default: ( show_header ? 0 : 1 )`
+
+Example:
 `testdir/file:39:+some added text`
 
-### Show a binary file that differs in an empty format. `[path:][~]:`
-#### `@show_binary [0,1] default: ( show_path ? 1 : 0 )`
+### Show binary files in empty format
 
-Binary files have no concept of lines, therefore there is no line number or
-diff line to show that a binary file differs. If the headers are shown you can
-always see whether or not a binary file differs because there will be a message
-"Binary files &lt;old&gt; and &lt;new&gt; differ". If the headers are not shown
-however, that message is suppressed and a binary file that differs has an
-"empty format" with no information, except for a tilde that will be shown if
-the file was removed.
+#### `show_binary [0,1] default: ( show_path ? 1 : 0 )`
 
-Here are two examples of the empty format, one where the path is shown and one
-where it isn't:  
-`testdir/binary_file::`  
+Binary files have no concept of lines; therefore, there is no line number or diff content to indicate that a binary file differs. When headers are shown, the message "Binary files &lt;old&gt; and &lt;new&gt; differ" indicates binary file changes. When headers are not shown, this message is suppressed and a binary file that differs has an "empty format" (`[path:][~]:`) with no information, except for a tilde if the file was removed.
+
+Examples of the empty format with and without path shown:
+`testdir/binary_file::`
 `:`
 
-Here is an example of a removed binary file, path shown:  
+Example of a removed binary file with path shown:
 `calc.exe:~:`
 
-### Allow colons in path.
-#### `@allow_colons_in_path [0,1] default: ( show_path ? 0 : 1 )`
+### Allow colons in path
 
-If this option is off then abort if a path that contains a colon is
-encountered. That's done to guarantee that this script's diff line output can
-always be parsed with the first colon occurring immediately after the full
-path. Note git diff paths may start with `<commit>:` like HEAD:./foo/bar, and
-for such a path this option would need to be on.
+#### `allow_colons_in_path [0,1] default: ( show_path ? 0 : 1 )`
 
-*Prior to
-[db79583](https://github.com/jay/showlinenum/commit/db79583)
-this option defaulted to off always.*
+When this option is disabled, the script aborts if a path containing a colon is encountered. This guarantees that the script's diff line output can always be parsed with the first colon occurring immediately after the full path. Note that git diff paths may start with `<commit>:` (e.g., `HEAD:./foo/bar`); for such paths, this option must be enabled.
 
-### Add color to some sections.
-#### `@color_{line_number,path,separator} <num>[;num][;num]`
+_Prior to [db79583](https://github.com/jay/showlinenum/commit/db79583) this option defaulted to off always._
 
-Color the respective section using one or more
-[ANSI color codes](https://user-images.githubusercontent.com/965580/27257186-e5709826-539a-11e7-9dcb-414fa65a0fbe.png).
-This is not recommended unless you are outputting to the terminal.
-If semi-colons are present in these options your shell may need them quoted.
+### Add color to sections
 
-Example: "color_line_number=1;37;45" is bright white foreground (1;37) on
-purple background (45).
+#### `color_{line_number,path,separator} <num>[;num][;num]`
+
+Colors the respective section using one or more [ANSI color codes](https://user-images.githubusercontent.com/965580/27257186-e5709826-539a-11e7-9dcb-414fa65a0fbe.png). Recommended only when outputting to a terminal. If semicolons are present in these options, your shell may require them to be quoted.
+
+Example: `color_line_number=1;37;45` specifies bright white foreground (1;37) on purple background (45).
 
 [![color_line_number](color_line_number.gif?raw=true)](color_line_number.gif?raw=true)
 
+## Testing
 
-Testing
--------
-
-showlinenum includes a comprehensive test suite covering all features and edge
-cases. Tests are automatically run via GitHub Actions CI on every push and pull
-request.
+showlinenum includes a comprehensive test suite covering all features and edge cases. Tests are automatically run via GitHub Actions CI on every push and pull request.
 
 To run tests locally:
+
 ```bash
 cd tests
 ./run_tests.sh
 ```
 
-For detailed information about the test suite, including descriptions of all
-test cases, see [tests/README.md](tests/README.md).
+For detailed information about the test suite, including descriptions of all test cases, see [tests/README.md](tests/README.md).
 
-
-Other
------
-
+## Other
 
 ### License
 
-showlinenum is free software and it is licensed under the
-[GNU General Public License version 3 (GPLv3)](http://www.gnu.org/copyleft/gpl.html),
-a license that will keep it free. You may not remove my copyright or the
-copyright of any contributors under the terms of the license. The source code
-for showlinenum cannot be used in proprietary software, but you can for example
-execute a free software application from a proprietary software application.
-**In any case please review the GPLv3 license, which is designed to protect
-freedom, not take it away.**
+showlinenum is free software licensed under the [GNU General Public License version 3 (GPLv3)](http://www.gnu.org/copyleft/gpl.html). Under the terms of this license, you may not remove the copyright of the author or any contributors. The source code for showlinenum cannot be used in proprietary software; however, you may execute a free software application from a proprietary software application. Please review the GPLv3 license for complete terms and conditions.
 
 ### Source
 
-The source can be found on
-[GitHub](https://github.com/jay/showlinenum).
-Since you're reading this maybe you're already there?
+The source code is available on [GitHub](https://github.com/jay/showlinenum).
 
-### Send me any questions you have
+### Contact
 
-Jay Satiro `<raysatiro$at$yahoo{}com>` and put showlinenum in the subject.
+For questions or issues, contact Jay Satiro at `<raysatiro$at$yahoo{}com>` with "showlinenum" in the subject line.
