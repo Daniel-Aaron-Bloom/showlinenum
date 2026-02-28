@@ -2,8 +2,9 @@ diff --git a/test.txt b/test.txt
 index 1234567..abcdefg 100644
 --- a/test.txt
 +++ b/test.txt
-@@ -9999998,3 +9999998,4 @@
- 9999998: line1
- 9999999:+line2
-10000000: line3
-10000001: line4
+@@ -98,5 +98,4 @@
+ line98
+ line99
+-line100
+ line101
+ line102

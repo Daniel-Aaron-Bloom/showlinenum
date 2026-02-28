@@ -346,11 +346,12 @@ function print_line_number(a_line_number)
     # to vary between different versions of awk and only when the integer is
     # large (how large?).
     # The 'f' type specifier should show [-9007199254740992, 9007199254740992]
-    printf "%.0f", a_line_number + 0;
+    # Format with uniform width (right-aligned)
+    printf "%*s", line_width, sprintf("%.0f", a_line_number + 0);
   }
   else
   {
-    printf "%s", a_line_number;
+    printf "%*s", line_width, a_line_number;
   }
 
   if(color_line_number)
@@ -425,7 +426,7 @@ function print_path(a_path)
 
     stripped = strip_ansi_color_codes($0);
 
-    regex = "^@@ -[0-9]+(,[0-9]+)? \\+([0-9]+)(,[0-9]+)? @@.*$";
+    regex = "^@@ -[0-9]+(,[0-9]+)? \\+([0-9]+)(,([0-9]+))? @@.*$";
     if(stripped ~ regex)
     {
       line = gensub(regex, "\\2", 1, stripped);
@@ -433,6 +434,29 @@ function print_path(a_path)
       # That only works when all color codes have been removed.
       line = line + 0;
       found_line = 1;
+
+      # Extract line count to calculate maximum line number width
+      line_count_str = gensub(regex, "\\4", 1, stripped);
+      if(line_count_str ~ /^[0-9]+$/)
+      {
+        line_count = line_count_str + 0;
+        if(line_count == 0)
+        {
+          # Removed file: only tilde markers (~) which are 1 character
+          line_width = 1;
+        }
+        else
+        {
+          max_line = line + line_count - 1;
+          line_width = length(max_line "");
+        }
+      }
+      else
+      {
+        # No count specified means 1 line
+        max_line = line;
+        line_width = length(max_line "");
+      }
     }
 
     if(!found_line)
@@ -636,7 +660,7 @@ function print_path(a_path)
   {
     print_path(path);
     # Fill the line number section with padding.
-    print_line_number(sprintf("%" length((line + 1) "") "s", " "));
+    print_line_number("");
   }
   else
   {

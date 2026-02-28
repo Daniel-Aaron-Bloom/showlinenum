@@ -151,6 +151,23 @@ purple background (45).
 [![color_line_number](color_line_number.gif?raw=true)](color_line_number.gif?raw=true)
 
 
+Testing
+-------
+
+showlinenum includes a comprehensive test suite covering all features and edge
+cases. Tests are automatically run via GitHub Actions CI on every push and pull
+request.
+
+To run tests locally:
+```bash
+cd tests
+./run_tests.sh
+```
+
+For detailed information about the test suite, including descriptions of all
+test cases, see [tests/README.md](tests/README.md).
+
+
 Other
 -----
 
