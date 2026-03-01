@@ -1,0 +1,10 @@
+diff --git a/test.txt b/test.txt
+index 1234567..abcdefg 100644
+--- a/test.txt
++++ b/test.txt
+@@ -10,5 +10,5 @@
+10: context1
+11: context2
+12: context3
+13: context4
+14: context5

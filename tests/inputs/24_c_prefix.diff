@@ -1,0 +1,8 @@
+diff --git c/test.txt c/test.txt
+index 1234567..abcdefg 100644
+--- c/test.txt
++++ c/test.txt
+@@ -1,2 +1,3 @@
+ line1
++line2
+ line3

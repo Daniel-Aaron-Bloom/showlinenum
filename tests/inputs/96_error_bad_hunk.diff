@@ -1,0 +1,8 @@
+diff --git a/test.txt b/test.txt
+index 1234567..abcdefg 100644
+--- a/test.txt
++++ b/test.txt
+@@ invalid hunk @@
+ line1
++line2
+ line3

@@ -1,0 +1,7 @@
+diff --git a/removed.txt b/removed.txt
+deleted file mode 100644
+index 1234567..0000000
+--- a/removed.txt
++++ /dev/null
+@@ -1,2 +0,0 @@
++this should be negative for removed file

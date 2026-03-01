@@ -1,0 +1,8 @@
+diff --git "a/file with spaces.txt" "b/file with spaces.txt"
+index 1234567..abcdefg 100644
+--- "a/file with spaces.txt"
++++ "b/file with spaces.txt"
+@@ -1,2 +1,3 @@
+1: line1
+2:+line2
+3: line3

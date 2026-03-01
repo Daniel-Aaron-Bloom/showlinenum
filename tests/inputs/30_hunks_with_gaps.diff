@@ -1,0 +1,16 @@
+diff --git a/test.txt b/test.txt
+index 1234567..abcdefg 100644
+--- a/test.txt
++++ b/test.txt
+@@ -5,2 +5,3 @@
+ line5
++added1
+ line6
+@@ -50,2 +51,3 @@
+ line50
++added2
+ line51
+@@ -100,2 +102,3 @@
+ line100
++added3
+ line101
