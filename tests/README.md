@@ -89,6 +89,7 @@ Run a specific test:
 | 48 | No-Prefix Multiple Files | Tests `--no-prefix` format with multiple files in a single diff. Verifies each file is handled independently with correct line numbering. | Default |
 | 49 | No-Prefix Quoted Spaces | Tests `--no-prefix` format with quoted file paths containing spaces. Verifies quoted paths without prefixes are correctly parsed. | Default |
 | 50 | No-Prefix Binary Removed | Tests `--no-prefix` format with a removed binary file. Shows `~:` to indicate a removed binary file without path prefix. | `show_binary=1 show_path=1` |
+| 51 | No Newline Removed | Tests handling of "No newline at end of file" warning when the old file is missing the newline but the new file has it (warning after `-` line). Complements test 09 which covers the opposite case. | Default |
 
 ## Error Test Cases
 
@@ -104,6 +105,7 @@ Error tests are identified by `.error` files in the `outputs/` directory contain
 | 95 | Removed File Bad Indicator | Tests that removed files reject lines with positive (+) indicators instead of expected negative (-) indicators. | Default | "Expected negative or backslash indicator for removed file" |
 | 96 | Bad Hunk Header | Tests that malformed hunk headers that don't match the expected `@@ -X,Y +A,B @@` format are rejected. | Default | "Unrecognized hunk info" |
 | 97 | Binary Path Extraction Error | Tests that malformed binary file diff lines that don't match the expected "Binary files ... differ" format are properly rejected. | Default | "Path info for binary file not found" |
+| 98 | Invalid Color Hex | Tests that color parameters containing letters (like hex codes) are rejected. Verifies that only numbers and semicolons are allowed in color parameters. | `color_line_number=3a2` | "color parameters may contain only numbers and semi-colons" |
 
 ## Adding New Tests
 
