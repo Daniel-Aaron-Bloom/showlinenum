@@ -4,7 +4,7 @@ showlinenum.awk - show line numbers for git diff
 
 [![Tests](https://github.com/jay/showlinenum/workflows/Tests/badge.svg)](https://github.com/jay/showlinenum/actions)
 
-This gawk script modifies git diff output by prepending line numbers to each line of the diff.
+This POSIX-compatible awk script modifies git diff output by prepending line numbers to each line of the diff. Compatible with awk, gawk, mawk, nawk, and other POSIX-compliant awk implementations.
 
 [![screenshot](screenshot.png?raw=true)](screenshot.png?raw=true)
 

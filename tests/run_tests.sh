@@ -22,7 +22,7 @@ run_test() {
 
   local args="" actual exit_code
   [ -f "$args_file" ] && args=$(<"$args_file")
-  actual=$(gawk -f "$AWK_SCRIPT" $args < "$1" 2>&1)
+  actual=$(bash "$AWK_SCRIPT" $args < "$1" 2>&1)
   exit_code=$?
 
   if [ -f "$error_file" ]; then

@@ -22,8 +22,10 @@
 #
 # DESCRIPTION
 #
-# This gawk script enhances git diff output by prepending line numbers to each
-# line, making it easier to identify the location of changes in files.
+# This POSIX awk script enhances git diff output by prepending line numbers to
+# each line, making it easier to identify the location of changes in files.
+# Compatible with awk, gawk, mawk, nawk, and other POSIX-compliant awk
+# implementations.
 #
 ################################################################################
 #
@@ -171,10 +173,10 @@
 
 
 {
-# Launcher block: This code is compatible with both bourne shell and gawk.
-# If the script is being interpreted by the bourne shell, gawk is executed
+# Launcher block: This code is compatible with both bourne shell and awk.
+# If the script is being interpreted by the bourne shell, awk is executed
 # to become the interpreter for this script.
-LAUNCHER="" "exec" "gawk" "-f" "$0" "$@"
+LAUNCHER="" "exec" "awk" "-f" "$0" "$@"
 }
 
 
@@ -245,10 +247,14 @@ function get_bool(input, a_default_value)
     FATAL(errmsg);
   }
 
-  regex = "^[[:blank:]]*([0-1])[[:blank:]]*$";
-  if(input ~ regex)
+  # Strip leading and trailing whitespace
+  result = input;
+  sub(/^[[:blank:]]+/, "", result);
+  sub(/[[:blank:]]+$/, "", result);
+
+  if(result ~ /^[0-1]$/)
   {
-    return gensub(regex, "\\1", 1, input) + 0;
+    return result + 0;
   }
 
   return a_default_value + 0;
@@ -323,7 +329,8 @@ function fix_extracted_path(input)
 # Return a string with all ANSI color codes removed
 function strip_ansi_color_codes(input)
 {
-  return gensub(/\033\[[0-9;]*m/, "", "g", input);
+  gsub(/\033\[[0-9;]*m/, "", input);
+  return input;
 }
 
 # Print a separator with optional color formatting
@@ -443,15 +450,30 @@ function print_path(a_path)
     regex = "^@@ -[0-9]+(,[0-9]+)? \\+([0-9]+)(,([0-9]+))? @@.*$";
     if(stripped ~ regex)
     {
-      # Extract starting line number from hunk header
-      line = gensub(regex, "\\2", 1, stripped);
-      # Convert string to integer (requires color codes to be removed first)
-      line = line + 0;
-      found_line = 1;
+      # Extract starting line number and count from hunk header
+      # Match the +N or +N,M part after the space
+      if(match(stripped, /\+[0-9]+(,[0-9]+)?/))
+      {
+        hunk_info = substr(stripped, RSTART, RLENGTH);
+
+        # Extract the starting line number (after the +)
+        if(match(hunk_info, /\+[0-9]+/))
+        {
+          line = substr(hunk_info, RSTART + 1, RLENGTH - 1);
+          line = line + 0;
+          found_line = 1;
+        }
+
+        # Extract the line count (after the comma, if present)
+        line_count_str = "";
+        if(match(hunk_info, /,[0-9]+/))
+        {
+          line_count_str = substr(hunk_info, RSTART + 1, RLENGTH - 1);
+        }
+      }
 
       # Calculate line number width for uniform formatting based on maximum
       # line number in this hunk
-      line_count_str = gensub(regex, "\\4", 1, stripped);
       if(line_count_str ~ /^[0-9]+$/)
       {
         line_count = line_count_str + 0;
@@ -508,8 +530,13 @@ function print_path(a_path)
     regex = "^\\-\\-\\- (\\042?([aiwco]\\/)?.+|\\/dev\\/null)$";
     if(stripped ~ regex)
     {
-      oldfile_path = fix_extracted_path(gensub(regex, "\\1", 1, stripped));
-      found_oldfile_path = 1;
+      # Extract everything after "--- "
+      if(match(stripped, /^--- /))
+      {
+        oldfile_path = substr(stripped, RSTART + RLENGTH);
+        oldfile_path = fix_extracted_path(oldfile_path);
+        found_oldfile_path = 1;
+      }
 
       if(show_header)
       {
@@ -525,8 +552,13 @@ function print_path(a_path)
     regex = "^\\+\\+\\+ (\\042?([biwco]\\/)?.+|\\/dev\\/null)$";
     if(stripped ~ regex)
     {
-      path = fix_extracted_path(gensub(regex, "\\1", 1, stripped));
-      found_path = 1;
+      # Extract everything after "+++ "
+      if(match(stripped, /^\+\+\+ /))
+      {
+        path = substr(stripped, RSTART + RLENGTH);
+        path = fix_extracted_path(path);
+        found_path = 1;
+      }
 
       if(show_header)
       {
@@ -540,7 +572,10 @@ function print_path(a_path)
     regex = "^Binary files (.*) differ$";
     if(stripped ~ regex)
     {
-      path = gensub(regex, "\\1", 1, stripped);
+      # Extract everything between "Binary files " and " differ"
+      path = stripped;
+      sub(/^Binary files /, "", path);
+      sub(/ differ$/, "", path);
 
       found_path = 0;
       found_oldfile_path = 0;
