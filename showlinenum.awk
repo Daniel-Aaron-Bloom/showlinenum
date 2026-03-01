@@ -34,6 +34,8 @@
 # All options for showlinenum require a value and are specified using the
 # format option=value.
 #
+# This script supports both standard git diff format and --no-prefix format.
+#
 ################################################################################
 #
 # OUTPUT FORMAT
@@ -80,6 +82,10 @@
 # Basic usage - prepend line numbers to git diff output:
 #   git diff --cached | showlinenum.awk
 #
+# Using --no-prefix format (removes a/ and b/ prefixes from paths):
+#   git diff --no-prefix | showlinenum.awk
+#   git diff --no-prefix --cached | showlinenum.awk
+#
 # Color output support:
 # This script properly handles ANSI escape color codes from git diff. To enable
 # color output, use --color=always. Note that color output should only be used
@@ -87,11 +93,13 @@
 # codes. Many scripts do not function correctly with color-coded input.
 #
 #   git diff --color=always --cached | showlinenum.awk
+#   git diff --color=always --no-prefix | showlinenum.awk
 #
 # Passing options:
 # Options can be passed using awk's -v option or the traditional format shown:
 #   git diff --color=always HEAD~1 HEAD | showlinenum.awk show_header=0
 #   git diff --color=always HEAD~1 HEAD | showlinenum.awk show_path=1 show_hunk=0
+#   git diff --no-prefix HEAD~1 HEAD | showlinenum.awk show_path=1
 #
 ################################################################################
 #
@@ -260,6 +268,7 @@ function die_if_bad_color(input)
 
 # Fix an extracted path by removing git diff prefix and trailing tabs
 # Example: '+++ b/foo/bar' with input 'b/foo/bar' returns 'foo/bar'
+# Also handles --no-prefix format where paths have no prefix
 function fix_extracted_path(input)
 {
   if(input == "/dev/null")
@@ -267,10 +276,12 @@ function fix_extracted_path(input)
     return input;
   }
 
-  if(input !~ /^\042?[abiwco]\//)
+  # Check if path has a git diff prefix (for standard format)
+  # or no prefix (for --no-prefix format)
+  if(input !~ /^\042?([abiwco]\/|[^\/])/)
   {
     errmsg = "fix_extracted_path(): sanity check failed, expected [abiwco]/ " \
-             "prefix." \
+             "prefix or --no-prefix format." \
              "\n" "Path: " input;
     FATAL(errmsg);
   }
@@ -302,8 +313,9 @@ function fix_extracted_path(input)
     sub(/\t$/, "", input);
   }
 
-  # Remove the git diff prefix (a/, b/, i/, w/, c/, o/)
-  sub(/[abiwco]\//, "", input);
+  # Remove the git diff prefix (a/, b/, i/, w/, c/, o/) if present
+  # This handles both standard format (with prefix) and --no-prefix format
+  sub(/^[abiwco]\//, "", input);
 
   return input;
 }
@@ -491,7 +503,9 @@ function print_path(a_path)
     stripped = strip_ansi_color_codes($0);
 
     # Extract old file path from "---" line
-    regex = "^\\-\\-\\- (\\042?[aiwco]\\/.+|\\/dev\\/null)$";
+    # Handles both standard format (a/file) and --no-prefix format (file)
+    # Paths can contain spaces and extend to the end of the line
+    regex = "^\\-\\-\\- (\\042?([aiwco]\\/)?.+|\\/dev\\/null)$";
     if(stripped ~ regex)
     {
       oldfile_path = fix_extracted_path(gensub(regex, "\\1", 1, stripped));
@@ -506,7 +520,9 @@ function print_path(a_path)
     }
 
     # Extract new file path from "+++" line
-    regex = "^\\+\\+\\+ (\\042?[biwco]\\/.+|\\/dev\\/null)$";
+    # Handles both standard format (b/file) and --no-prefix format (file)
+    # Paths can contain spaces and extend to the end of the line
+    regex = "^\\+\\+\\+ (\\042?([biwco]\\/)?.+|\\/dev\\/null)$";
     if(stripped ~ regex)
     {
       path = fix_extracted_path(gensub(regex, "\\1", 1, stripped));
@@ -535,7 +551,8 @@ function print_path(a_path)
       {
         oldfile_path = substr(path, 1, length(path) - RLENGTH);
 
-        if((oldfile_path ~ /^\042?[aiwco]\//) && index(diff, oldfile_path))
+        # Check for standard format (with prefix) or --no-prefix format
+        if(((oldfile_path ~ /^\042?[aiwco]\//) || (oldfile_path !~ /^\042?and /)) && index(diff, oldfile_path))
         {
           oldfile_path = fix_extracted_path(oldfile_path);
           found_oldfile_path = 1;
@@ -546,7 +563,8 @@ function print_path(a_path)
 
       # Extract new file path for binary files by finding the longest rightmost
       # match between the diff header line and the binary files notice line
-      while(!found_path && match(path, /and \042?[biwco]\/.+$/))
+      # Handles both standard format (b/file) and --no-prefix format (file)
+      while(!found_path && match(path, /and \042?([biwco]\/)?.+$/))
       {
         path_len = RLENGTH - 4;
         path = substr(path, RSTART + 4, path_len);

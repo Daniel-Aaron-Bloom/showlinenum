@@ -1,0 +1,9 @@
+diff --git newfile.txt newfile.txt
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ newfile.txt
+@@ -0,0 +1,3 @@
+1:+first line
+2:+second line
+3:+third line

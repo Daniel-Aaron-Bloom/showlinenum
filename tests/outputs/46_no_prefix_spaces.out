@@ -1,0 +1,4 @@
+my file.txt:1: line1
+my file.txt:2:+line2
+my file.txt:3: line3
+my file.txt:4: line4

@@ -80,6 +80,15 @@ Run a specific test:
 | 39 | Extreme Line Numbers | Tests handling of extremely large line numbers near AWK's floating point limit (9,007,199,254,740,992) to verify no scientific notation is used. | Default |
 | 40 | Path with Tab | Tests handling of file paths containing tab characters, which git quotes with double quotes. | Default |
 | 41 | Mixed File Types | Tests a single diff containing multiple file types: new file, modified binary, removed file, and modified text file. Verifies state resets correctly between files. | Default |
+| 42 | No-Prefix Basic | Tests basic `--no-prefix` format with additions. Verifies paths without `a/` and `b/` prefixes are correctly parsed. | Default |
+| 43 | No-Prefix Deletions | Tests `--no-prefix` format with deleted lines. Verifies line number padding works correctly without path prefixes. | Default |
+| 44 | No-Prefix New File | Tests `--no-prefix` format with a newly added file. Verifies all lines are marked with `+` indicator and paths are extracted correctly. | Default |
+| 45 | No-Prefix Removed File | Tests `--no-prefix` format with a deleted file. All lines should show `~` as the line number indicator. | Default |
+| 46 | No-Prefix Spaces | Tests `--no-prefix` format with file paths containing spaces (unquoted). Verifies path extraction and display with `show_path=1`. | `show_path=1 show_header=0` |
+| 47 | No-Prefix Binary | Tests `--no-prefix` format with binary files. Verifies binary files are handled correctly without path prefixes. | `show_binary=1 show_path=1` |
+| 48 | No-Prefix Multiple Files | Tests `--no-prefix` format with multiple files in a single diff. Verifies each file is handled independently with correct line numbering. | Default |
+| 49 | No-Prefix Quoted Spaces | Tests `--no-prefix` format with quoted file paths containing spaces. Verifies quoted paths without prefixes are correctly parsed. | Default |
+| 50 | No-Prefix Binary Removed | Tests `--no-prefix` format with a removed binary file. Shows `~:` to indicate a removed binary file without path prefix. | `show_binary=1 show_path=1` |
 
 ## Error Test Cases
 

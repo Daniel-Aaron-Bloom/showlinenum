@@ -14,6 +14,8 @@ This gawk script modifies git diff output by prepending line numbers to each lin
 
 All options for showlinenum require a value and are specified using the format `option=value`.
 
+This script supports both standard git diff format and `--no-prefix` format (which omits the `a/` and `b/` path prefixes).
+
 Combined diff format is not supported.
 
 ## Output
@@ -47,14 +49,22 @@ All errors are sent to standard error output (stderr). All errors are treated as
 Basic usage with line numbers prepended to git diff output:
 `git diff --cached | showlinenum.awk`
 
+Using `--no-prefix` format (removes `a/` and `b/` prefixes from paths):
+`git diff --no-prefix | showlinenum.awk`
+`git diff --no-prefix --cached | showlinenum.awk`
+
 This script properly handles ANSI escape color codes output by git diff. To enable color output, pass `--color=always` to git diff. Note that this forces color output in all cases, so it is recommended only when outputting to a terminal or to a destination that can properly handle color codes. Many scripts do not function correctly with color-coded input.
 
-Same as the first example, with color output enabled:
+Color output with standard format:
 `git diff --color=always --cached | showlinenum.awk`
+
+Color output with `--no-prefix` format:
+`git diff --color=always --no-prefix | showlinenum.awk`
 
 Options can be passed using awk's `-v` option or by appending them directly:
 `git diff --color=always HEAD~1 HEAD | showlinenum.awk show_header=0`
 `git diff --color=always HEAD~1 HEAD | showlinenum.awk show_path=1 show_hunk=0`
+`git diff --no-prefix HEAD~1 HEAD | showlinenum.awk show_path=1`
 
 ## Options
 
