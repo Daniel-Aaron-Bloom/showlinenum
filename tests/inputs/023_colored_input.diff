@@ -1,11 +1,11 @@
-diff --git a/test.txt b/test.txt
-index 1234567..abcdefg 100644
---- a/test.txt
-+++ b/test.txt
-@@ -1,4 +1,5 @@
+[1mdiff --git a/test.txt b/test.txt[m
+[1mindex 1234567..abcdefg 100644[m
+[1m--- a/test.txt[m
+[1m+++ b/test.txt[m
+[36m@@ -1,4 +1,5 @@[m
  line1
--line2
-+line2a
-+line2b
+[31m-line2[m
+[32m+line2a[m
+[32m+line2b[m
  line3
  line4
