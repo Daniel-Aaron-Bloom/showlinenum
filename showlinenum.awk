@@ -627,12 +627,20 @@ function print_path(a_path)
   }
 
   # Validate that required path information has been found
+  # NOTE: This check is unreachable. To reach this point, parsing_diff_header
+  # must be 0, which only happens after processing a @@ hunk header. But the
+  # hunk header processing (line 436) triggers "Line info found before path
+  # info" if path info is missing, preventing execution from reaching here.
   if(!found_path || !found_oldfile_path)
   {
     FATAL("Path info not found.");
   }
 
   # Validate that hunk line information has been found
+  # NOTE: This check is unreachable. To reach this point, we must have processed
+  # a @@ hunk header (the only way to exit parsing_diff_header mode). Hunk header
+  # processing either sets found_line=1 (line 450) or triggers "Unrecognized hunk
+  # info" error (line 489), so found_line is always true here.
   if(!found_line)
   {
     FATAL("Line info not found.");

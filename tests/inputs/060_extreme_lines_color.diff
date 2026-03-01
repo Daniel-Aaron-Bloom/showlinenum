@@ -1,0 +1,9 @@
+diff --git a/huge.txt b/huge.txt
+index 1234567..abcdefg 100644
+--- a/huge.txt
++++ b/huge.txt
+@@ -9007199254740988,3 +9007199254740988,4 @@
+ line at 9007199254740988
++inserted line
+ line at 9007199254740989
+ line at 9007199254740990
