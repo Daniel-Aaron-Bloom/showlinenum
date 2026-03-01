@@ -1,0 +1,8 @@
+diff --git a/文件_日本語.txt b/文件_日本語.txt
+index 1234567..abcdefg 100644
+--- a/文件_日本語.txt
++++ b/文件_日本語.txt
+@@ -1,2 +1,3 @@
+ line1
++unicode test
+ line2

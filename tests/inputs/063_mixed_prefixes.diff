@@ -1,0 +1,24 @@
+diff --git a/file1.txt b/file1.txt
+index 1234567..abcdefg 100644
+--- a/file1.txt
++++ b/file1.txt
+@@ -1,2 +1,3 @@
+ line1
++added in file1
+ line2
+diff --git i/file2.txt w/file2.txt
+index 2345678..bcdefgh 100644
+--- i/file2.txt
++++ w/file2.txt
+@@ -1,2 +1,3 @@
+ line1
++added in file2
+ line2
+diff --git c/file3.txt o/file3.txt
+index 3456789..cdefghi 100644
+--- c/file3.txt
++++ o/file3.txt
+@@ -1,2 +1,3 @@
+ line1
++added in file3
+ line2

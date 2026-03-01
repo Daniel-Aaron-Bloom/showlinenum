@@ -1,0 +1,6 @@
+[34mtest.txt[m[36m:[m[32m1[m[36m:[m line1
+[34mtest.txt[m[36m:[m[32m [m[36m:[m-line2
+[34mtest.txt[m[36m:[m[32m2[m[36m:[m+line2a
+[34mtest.txt[m[36m:[m[32m3[m[36m:[m+line2b
+[34mtest.txt[m[36m:[m[32m4[m[36m:[m line3
+[34mtest.txt[m[36m:[m[32m5[m[36m:[m line4
